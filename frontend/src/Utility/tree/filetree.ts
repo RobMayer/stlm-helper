@@ -1,5 +1,3 @@
-import { faSquareHackerNews } from "@fortawesome/free-brands-svg-icons";
-import { Children } from "react";
 import natsort from "../natsort";
 import AbstractTree from "./abstract";
 
@@ -116,26 +114,6 @@ export default class FileTree extends AbstractTree<File | Folder> {
         }
       }
     });
-
-    // `/`
-    // `/level1/`
-    // `/level1/level2/file.txt`
-    // `/level1/level2/`
-    // `/level1/level2/level3/file.text`
-
-    /*
-    list.forEach((id: string) => {
-      const isFolder = id.endsWith(delim);
-      const chunks = id.split(delim);
-      //   const chunks = e.split(delim).slice(e.startsWith(delim) ? 1 : isFolder ? -1 : undefined);
-      if (isFolder) {
-        chunks.pop();
-      }
-      if (chunks.length > 0) {
-        const fullName = chunks.pop();
-      }
-    });
-    */
 
     return n;
   }

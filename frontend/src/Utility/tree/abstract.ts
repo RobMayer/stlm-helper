@@ -29,6 +29,10 @@ export default class AbstractTree<T extends Object> {
     return this.#tree[key];
   }
 
+  root() {
+    return this.#root;
+  }
+
   has(key: string) {
     return key in this.#tree;
   }
