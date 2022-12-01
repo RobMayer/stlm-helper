@@ -1,32 +1,27 @@
 import { Component, HTMLAttributes, useCallback } from "react";
 import AbstractTree from "../../Utility/tree/abstract";
 
-export type TreeNodeProps<T extends AbstractTree<any>> = {
+export type TreeNodeProps<T extends AbstractTree<any>, M extends Object = {}> = M & {
   tree: T;
   nodeId: string;
   depth: boolean[];
   name?: string;
-};
+} & TreeNodeRenderer<T, M>;
 
 type TreeNodeRenderer<T extends AbstractTree<any>, M extends Object> = {
-  nodeComponent: ((props: TreeNodeProps<T> & M) => JSX.Element) | typeof Component<TreeNodeProps<T> & M, any>;
+  nodeComponent:
+    | ((props: TreeNodeProps<T, M> & M & TreeNodeRenderer<T, M>) => JSX.Element)
+    | typeof Component<TreeNodeProps<T, M> & M & TreeNodeRenderer<T, M>, any>;
 };
 
-type TreeNodeDelegator<M extends Object> = {
-  nodeProps: M;
-};
-
-type BaseTreeProps<T extends AbstractTree<any>> = {
+export type TreeDisplayProps<T extends AbstractTree<any>, M extends Object = never> = {
   tree: T;
   showRoot?: boolean;
   rootName?: string;
-};
+} & ([M] extends [never] ? { nodeProps?: M } : { nodeProps: M }) &
+  TreeNodeRenderer<T, M>;
 
-export type TreeDisplayProps<T extends AbstractTree<any>, M extends Object> = BaseTreeProps<T> &
-  TreeNodeRenderer<T, M> &
-  TreeNodeDelegator<M>;
-
-const TreeDisplay = <T extends AbstractTree<any>, M extends Object>({
+const TreeDisplay = <T extends AbstractTree<any>, M extends Object = never>({
   tree,
   nodeProps,
   nodeComponent: NodeComponent,
@@ -37,10 +32,26 @@ const TreeDisplay = <T extends AbstractTree<any>, M extends Object>({
   return (
     <div {...props}>
       {showRoot ? (
-        <NodeComponent tree={tree} nodeId={tree.root()} depth={[]} name={rootName} {...nodeProps} />
+        <NodeComponent
+          {...((nodeProps ?? {}) as M)}
+          tree={tree}
+          nodeId={tree.root()}
+          depth={[]}
+          name={rootName}
+          nodeComponent={NodeComponent}
+        />
       ) : (
         tree.get(tree.root()).children.map((childKey: string) => {
-          <NodeComponent key={childKey} tree={tree} depth={[]} nodeId={childKey} {...nodeProps} />;
+          return (
+            <NodeComponent
+              {...((nodeProps ?? {}) as M)}
+              key={childKey}
+              tree={tree}
+              depth={[]}
+              nodeId={childKey}
+              nodeComponent={NodeComponent}
+            />
+          );
         })
       )}
     </div>
@@ -48,30 +59,3 @@ const TreeDisplay = <T extends AbstractTree<any>, M extends Object>({
 };
 
 export default TreeDisplay;
-
-/* for Building new TreeDisplays */
-
-export type IExtendedNodeHandler<T extends AbstractTree<any>, E extends Object> = TreeNodeProps<T> &
-  TreeNodeRenderer<T, E>;
-
-export const extendTreeDisplay = <T extends AbstractTree<any>, N extends Object>(
-  NodeHandler: <E extends Object>(p: TreeNodeProps<T> & TreeNodeRenderer<T, N & E>) => JSX.Element
-) => {
-  return <E extends Object>({
-    tree,
-    nodeComponent,
-    nodeProps,
-  }: BaseTreeProps<T> & TreeNodeRenderer<T, N & E> & TreeNodeDelegator<E>) => {
-    const Delegate = useCallback(({ nodeComponent: nC, ...p }: TreeNodeProps<T> & TreeNodeRenderer<T, N & E>) => {
-      return <NodeHandler<E> {...p} nodeComponent={nC} />;
-    }, []);
-
-    return (
-      <TreeDisplay<T, TreeNodeRenderer<T, N & E>>
-        tree={tree}
-        nodeComponent={Delegate}
-        nodeProps={{ ...nodeProps, nodeComponent }}
-      />
-    );
-  };
-};
