@@ -21,7 +21,7 @@ import useLoadingBar from "../../Utility/loadingbar";
 import styled from "styled-components";
 import Button from "../../Components/buttons/Button";
 import useDebounceCallback from "../../Utility/usedebouncecallback";
-import FileTreeDisplay from "../../Components/output/FileTreeDisplay";
+import FileTreeDisplay from "../../Components/output/old/OldFileTreeDisplay";
 import FileTree from "../../Utility/tree/filetree";
 
 const FilesToFolders = () => {

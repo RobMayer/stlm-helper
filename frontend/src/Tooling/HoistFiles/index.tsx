@@ -11,7 +11,7 @@ import Label from "../../Components/layout/Label";
 import Panel from "../../Components/layout/Panel";
 import ScrollPane from "../../Components/layout/ScrollPane";
 import ToolTitle from "../../Components/layout/ToolTitle";
-import FileTreeDisplay from "../../Components/output/FileTreeDisplay";
+import FileTreeDisplay from "../../Components/output/old/OldFileTreeDisplay";
 import FolderPicker from "../../Components/selectors/FolderPicker";
 import { Items } from "../../Components/selectors/ListSelector";
 import useLoadingBar from "../../Utility/loadingbar";

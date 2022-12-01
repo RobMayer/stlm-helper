@@ -1,76 +1,84 @@
-import { Component } from "react";
+import { Component, useCallback } from "react";
 import AbstractTree from "../../../Utility/tree/abstract";
 import FileTree from "../../../Utility/tree/filetree";
 
-type TestTreeComponent<T extends AbstractTree<any>, M extends Object> =
-  | ((props: TreeNodeProps<T> & M) => JSX.Element)
-  | typeof Component<TreeNodeProps<T> & M, any>;
-
-type TestTreeDisplay<T extends AbstractTree<any>, M extends Object> = {
+type TreeDisplayProps<T extends AbstractTree<any>> = {
   tree: T;
 };
 
 type TreeNodeProps<T extends AbstractTree<any>> = {
   tree: T;
+  nodeId: string;
+  depth: boolean[];
 };
 
-type TestTreeNodeRenderer<T extends AbstractTree<any>, M extends Object> = {
-  nodeComponent: TestTreeComponent<T, M>;
+type TreeNodeRenderer<T extends AbstractTree<any>, M extends Object> = {
+  nodeComponent: ((props: TreeNodeProps<T> & M) => JSX.Element) | typeof Component<TreeNodeProps<T> & M, any>;
 };
 
-type TestNodeDelgator<M extends Object> = {
+type TreeNodeDelegator<M extends Object> = {
   nodeProps: M;
 };
 
-/* WRAPPER TEST */
+/* END GOAL */
 
-const EndGoalNode = () => {
-  return <></>;
+type DelegatedProps = {
+  usedFiles: string[];
 };
 
-type Thing = {
-  something: boolean;
+const EndGoalThing = ({ tree, nodeId, depth, isFolded, onFold, usedFiles }: ExtendedNodeProps<DelegatedProps>) => {
+  const entry = tree.get(nodeId);
+
+  return <>{entry.name}</>;
 };
 
 const EndGoal = () => {
-  const tree = new FileTree("/", { isFolder: true, name: "something" });
+  const tree = new FileTree("/", { isFolder: true, name: "root" });
 
   return (
     <>
-      <OneLevelTree tree={tree} isLoaded={true} />
-      <WrapperTree tree={tree} nodeComponent={EndGoalNode} />
+      <span>This is a simulacrum of an actual layout component</span>
+      <ExtendedTree<DelegatedProps> tree={tree} nodeComponent={EndGoalThing} nodeProps={{ usedFiles: [] }} />
     </>
   );
-
-  // return <WrapperTree<Thing> nodeComponent={EndGoalNode} tree={tree} something={true} />;
 };
 
-/* WRAPPER TEST */
-
-type WrapperBits = {
+/* EXTENDED VERSION */
+export type ExtendedProps = {
   isFolded: boolean;
-  doFolding: () => void;
+  onFold: () => void;
 };
 
-const WrapperNode = <M extends Object>(
-  props: TestTreeNodeRenderer<FileTree, {}> & TreeNodeProps<FileTree> & WrapperBits & M
-) => {
-  const { tree, nodeComponent: NodeComponent, isFolded, doFolding } = props;
-  return <NodeComponent tree={tree} />;
+export type ExtendedNodeProps<T extends Object> = TreeNodeProps<FileTree> & ExtendedProps & T;
+
+const ExtendedNode = <O extends Object>({
+  nodeComponent: NodeComponent,
+  ...props
+}: TreeNodeProps<FileTree> & TreeNodeRenderer<FileTree, ExtendedProps & O>) => {
+  return <NodeComponent isFolded={true} onFold={() => {}} {...(props as O & TreeNodeProps<FileTree>)} />;
 };
 
-const WrapperTree = <M extends Object>(
-  props: TestTreeDisplay<FileTree, {}> & TestTreeNodeRenderer<FileTree, M> & M
-) => {
-  const { tree, nodeComponent } = props;
+type ExtendedTreeType<T extends AbstractTree<any>, I extends Object, E extends Object> = TreeDisplayProps<T> &
+  TreeNodeRenderer<T, I> &
+  TreeNodeDelegator<E>;
 
-  const isFolded = false;
+export const ExtendedTree = <E extends Object>({
+  tree,
+  nodeComponent,
+  nodeProps,
+}: TreeDisplayProps<FileTree> & TreeNodeRenderer<FileTree, ExtendedProps & E> & TreeNodeDelegator<E>) => {
+  const Delegate = useCallback(
+    ({ nodeComponent: nC, ...p }: TreeNodeProps<FileTree> & TreeNodeRenderer<FileTree, ExtendedProps & E>) => {
+      return <ExtendedNode<E> {...p} nodeComponent={nC} />;
+    },
+    []
+  );
 
   return (
-    <BaseTree<FileTree, TestTreeNodeRenderer<FileTree, M> & WrapperBits>
+    <BaseTree<FileTree, TreeNodeRenderer<FileTree, ExtendedProps & E>>
       tree={tree}
-      nodeComponent={WrapperNode}
-      nodeProps={{ nodeComponent, isFolded, doFolding: () => {} }}
+      nodeComponent={Delegate}
+      nodeProps={{ ...nodeProps, nodeComponent }}
     />
   );
 };
@@ -81,30 +89,26 @@ type OneLevelType = {
   isLoaded: boolean;
 };
 
-type OtherLevelType = {
-  isLoaded: string;
-};
-
-const OneLevelNode = (props: TreeNodeProps<FileTree> & OneLevelType) => {
+const OneLevelNode = ({ isLoaded, tree, nodeId, depth }: TreeNodeProps<FileTree> & OneLevelType) => {
   return <></>;
 };
 
 const OneLevelTree = ({
   tree,
   isLoaded,
-}: TestTreeDisplay<FileTree, {}> & OneLevelType & TestNodeDelgator<OneLevelType>) => {
+}: TreeDisplayProps<FileTree> & OneLevelType & TreeNodeDelegator<OneLevelType>) => {
   return <BaseTree<FileTree, OneLevelType> tree={tree} nodeComponent={OneLevelNode} nodeProps={{ isLoaded }} />;
 };
 
 /* BASE TREE */
 
 const BaseTree = <T extends AbstractTree<any>, M extends Object>(
-  props: TestTreeDisplay<T, M> & TestTreeNodeRenderer<T, M> & TestNodeDelgator<M>
+  props: TreeDisplayProps<T> & TreeNodeRenderer<T, M> & TreeNodeDelegator<M>
 ) => {
   const { tree, nodeProps, nodeComponent: NodeComponent } = props;
   return (
     <>
-      <NodeComponent tree={tree} {...nodeProps} />
+      <NodeComponent tree={tree} {...nodeProps} nodeId={tree.root()} depth={[]} />
     </>
   );
 };

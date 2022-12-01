@@ -11,6 +11,7 @@ import Convert3mf from "./Tooling/Convert3mf";
 import useLoadingBar from "./Utility/loadingbar";
 import STLIntegrity from "./Tooling/STLIntegrity";
 import HoistFiles from "./Tooling/HoistFiles";
+import Sandbox from "./Tooling/Sandbox";
 
 function App() {
   const [, isLoading] = useLoadingBar();
@@ -37,6 +38,9 @@ function App() {
         <MenuBar.Link disabled={isLoading} to="/tools/stlintegrity" title="Convert STLs to 3MFs">
           STL Integrity
         </MenuBar.Link>
+        <MenuBar.Link disabled={isLoading} to="/tools/sandbox" title="Rob Sandbox">
+          STL Integrity
+        </MenuBar.Link>
       </MenuBar.Menu>
       <Content>
         <Routes>
@@ -48,6 +52,7 @@ function App() {
           <Route path={"/tools/tagreplacer"} element={<TagReplacer />} />
           <Route path={"/tools/convert3mf"} element={<Convert3mf />} />
           <Route path={"/tools/stlintegrity"} element={<STLIntegrity />} />
+          <Route path={"/tools/sandbox"} element={<Sandbox />} />
         </Routes>
       </Content>
     </Wrapper>
